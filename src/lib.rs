@@ -1,15 +1,12 @@
 use nom::{
     bytes::complete::tag,
-    combinator::{map, map_res, value},
-    number::{
-        complete::{double, float},
-        streaming::f64,
-    },
+    combinator::{map, value},
+    number::complete::double,
     IResult, Parser,
 };
 
 #[derive(Debug, Clone, PartialEq)]
-enum TokenKind {
+enum Token {
     Subtraction,
     Addition,
     Multiplication,
@@ -20,79 +17,36 @@ enum TokenKind {
     Number(f64),
 }
 
-#[derive(Debug, Clone, PartialEq)]
-struct Token {
-    kind: TokenKind,
-}
-
 fn parse_sub(input: &str) -> IResult<&str, Token> {
-    value(
-        Token {
-            kind: TokenKind::Subtraction,
-        },
-        tag("-"),
-    )(input)
+    value(Token::Subtraction, tag("-"))(input)
 }
 
 fn parse_add(input: &str) -> IResult<&str, Token> {
-    value(
-        Token {
-            kind: TokenKind::Addition,
-        },
-        tag("+"),
-    )(input)
+    value(Token::Addition, tag("+"))(input)
 }
 
 fn parse_mul(input: &str) -> IResult<&str, Token> {
-    value(
-        Token {
-            kind: TokenKind::Multiplication,
-        },
-        tag("*"),
-    )(input)
+    value(Token::Multiplication, tag("*"))(input)
 }
 
 fn parse_div(input: &str) -> IResult<&str, Token> {
-    value(
-        Token {
-            kind: TokenKind::Division,
-        },
-        tag("/"),
-    )(input)
+    value(Token::Division, tag("/"))(input)
 }
 
 fn parse_exp(input: &str) -> IResult<&str, Token> {
-    value(
-        Token {
-            kind: TokenKind::Exponentiation,
-        },
-        tag("^"),
-    )(input)
+    value(Token::Exponentiation, tag("^"))(input)
 }
 
 fn parse_open_paren(input: &str) -> IResult<&str, Token> {
-    value(
-        Token {
-            kind: TokenKind::OpeningParenthesis,
-        },
-        tag("("),
-    )(input)
+    value(Token::OpeningParenthesis, tag("("))(input)
 }
 
 fn parse_close_paren(input: &str) -> IResult<&str, Token> {
-    value(
-        Token {
-            kind: TokenKind::ClosingParenthesis,
-        },
-        tag(")"),
-    )(input)
+    value(Token::ClosingParenthesis, tag(")"))(input)
 }
 
 fn parse_number(input: &str) -> IResult<&str, Token> {
-    map(double, |res| Token {
-        kind: TokenKind::Number(res),
-    })
-    .parse(input)
+    map(double, |res| Token::Number(res)).parse(input)
 }
 
 #[cfg(test)]
@@ -106,15 +60,7 @@ mod tests {
     fn test_sub(#[case] input: &str) {
         let res = parse_sub(input);
 
-        assert_eq!(
-            res,
-            Ok((
-                "10",
-                Token {
-                    kind: TokenKind::Subtraction,
-                }
-            ))
-        );
+        assert_eq!(res, Ok(("10", Token::Subtraction)));
     }
 
     #[rstest]
@@ -122,15 +68,7 @@ mod tests {
     fn test_add(#[case] input: &str) {
         let res = parse_add(input);
 
-        assert_eq!(
-            res,
-            Ok((
-                "10",
-                Token {
-                    kind: TokenKind::Addition,
-                }
-            ))
-        );
+        assert_eq!(res, Ok(("10", Token::Addition)));
     }
 
     #[rstest]
@@ -138,15 +76,7 @@ mod tests {
     fn test_mul(#[case] input: &str) {
         let res = parse_mul(input);
 
-        assert_eq!(
-            res,
-            Ok((
-                "10",
-                Token {
-                    kind: TokenKind::Multiplication,
-                }
-            ))
-        );
+        assert_eq!(res, Ok(("10", Token::Multiplication)));
     }
 
     #[rstest]
@@ -154,15 +84,7 @@ mod tests {
     fn test_div(#[case] input: &str) {
         let res = parse_div(input);
 
-        assert_eq!(
-            res,
-            Ok((
-                "10",
-                Token {
-                    kind: TokenKind::Division,
-                }
-            ))
-        );
+        assert_eq!(res, Ok(("10", Token::Division)));
     }
 
     #[rstest]
@@ -170,15 +92,7 @@ mod tests {
     fn test_exp(#[case] input: &str) {
         let res = parse_exp(input);
 
-        assert_eq!(
-            res,
-            Ok((
-                "10",
-                Token {
-                    kind: TokenKind::Exponentiation,
-                }
-            ))
-        );
+        assert_eq!(res, Ok(("10", Token::Exponentiation)));
     }
 
     #[rstest]
@@ -186,15 +100,7 @@ mod tests {
     fn test_open_paren(#[case] input: &str) {
         let res = parse_open_paren(input);
 
-        assert_eq!(
-            res,
-            Ok((
-                "",
-                Token {
-                    kind: TokenKind::OpeningParenthesis,
-                }
-            ))
-        );
+        assert_eq!(res, Ok(("", Token::OpeningParenthesis)));
     }
 
     #[rstest]
@@ -202,15 +108,7 @@ mod tests {
     fn test_close_paren(#[case] input: &str) {
         let res = parse_close_paren(input);
 
-        assert_eq!(
-            res,
-            Ok((
-                "",
-                Token {
-                    kind: TokenKind::ClosingParenthesis,
-                }
-            ))
-        );
+        assert_eq!(res, Ok(("", Token::ClosingParenthesis)));
     }
 
     #[rstest]
@@ -220,14 +118,6 @@ mod tests {
     fn test_number(#[case] input: &str, #[case] output: f64, #[case] remainder: &str) {
         let res = parse_number(input);
 
-        assert_eq!(
-            res,
-            Ok((
-                remainder,
-                Token {
-                    kind: TokenKind::Number(output),
-                }
-            ))
-        );
+        assert_eq!(res, Ok((remainder, Token::Number(output))));
     }
 }
