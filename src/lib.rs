@@ -1,9 +1,12 @@
 use nom::{
     branch::alt,
     bytes::complete::tag,
+    character::complete::multispace0,
     combinator::{map, value},
+    error::ParseError,
     multi::many0,
     number::complete::double,
+    sequence::delimited,
     IResult, Parser,
 };
 
@@ -17,6 +20,13 @@ enum Token {
     OpeningParenthesis,
     ClosingParenthesis,
     Number(f64),
+}
+
+fn ws_eater<'i, O, E: ParseError<&'i str>, F>(inner: F) -> impl Parser<&'i str, O, E>
+where
+    F: Parser<&'i str, O, E>,
+{
+    delimited(multispace0, inner, multispace0)
 }
 
 fn parse_token(input: &str) -> IResult<&str, Token> {
@@ -37,35 +47,35 @@ fn tokenize(input: &str) -> IResult<&str, Vec<Token>> {
 }
 
 fn parse_sub(input: &str) -> IResult<&str, Token> {
-    value(Token::Subtraction, tag("-"))(input)
+    value(Token::Subtraction, ws_eater(tag("-")))(input)
 }
 
 fn parse_add(input: &str) -> IResult<&str, Token> {
-    value(Token::Addition, tag("+"))(input)
+    value(Token::Addition, ws_eater(tag("+")))(input)
 }
 
 fn parse_mul(input: &str) -> IResult<&str, Token> {
-    value(Token::Multiplication, tag("*"))(input)
+    value(Token::Multiplication, ws_eater(tag("*")))(input)
 }
 
 fn parse_div(input: &str) -> IResult<&str, Token> {
-    value(Token::Division, tag("/"))(input)
+    value(Token::Division, ws_eater(tag("/")))(input)
 }
 
 fn parse_exp(input: &str) -> IResult<&str, Token> {
-    value(Token::Exponentiation, tag("^"))(input)
+    value(Token::Exponentiation, ws_eater(tag("^")))(input)
 }
 
 fn parse_open_paren(input: &str) -> IResult<&str, Token> {
-    value(Token::OpeningParenthesis, tag("("))(input)
+    value(Token::OpeningParenthesis, ws_eater(tag("(")))(input)
 }
 
 fn parse_close_paren(input: &str) -> IResult<&str, Token> {
-    value(Token::ClosingParenthesis, tag(")"))(input)
+    value(Token::ClosingParenthesis, ws_eater(tag(")")))(input)
 }
 
 fn parse_number(input: &str) -> IResult<&str, Token> {
-    map(double, |res| Token::Number(res)).parse(input)
+    map(ws_eater(double), Token::Number).parse(input)
 }
 
 #[cfg(test)]
@@ -140,9 +150,11 @@ mod tests {
         assert_eq!(res, Ok((remainder, Token::Number(output))));
     }
 
-    #[test]
-    fn test_tokenizer() {
-        let res = tokenize("1+1");
+    #[rstest]
+    #[case("1+1")]
+    #[case("1 + 1")]
+    fn test_tokenizer(#[case] input: &str) {
+        let res = tokenize(input);
 
         assert_eq!(
             res,
