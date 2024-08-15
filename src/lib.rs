@@ -11,7 +11,7 @@ use nom::{
 };
 
 #[derive(Debug, Clone, PartialEq)]
-enum Token {
+pub enum Token {
     Subtraction,
     Addition,
     Multiplication,
@@ -43,7 +43,7 @@ fn parse_token(input: &str) -> IResult<&str, Token> {
     ))(input)
 }
 
-fn tokenize(input: &str) -> IResult<&str, Vec<Token>> {
+pub fn tokenize(input: &str) -> IResult<&str, Vec<Token>> {
     many0(parse_token)(input)
 }
 
