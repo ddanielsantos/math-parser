@@ -1,6 +1,8 @@
 use nom::{
+    branch::alt,
     bytes::complete::tag,
     combinator::{map, value},
+    multi::many0,
     number::complete::double,
     IResult, Parser,
 };
@@ -15,6 +17,23 @@ enum Token {
     OpeningParenthesis,
     ClosingParenthesis,
     Number(f64),
+}
+
+fn parse_token(input: &str) -> IResult<&str, Token> {
+    alt((
+        parse_add,
+        parse_sub,
+        parse_mul,
+        parse_div,
+        parse_exp,
+        parse_open_paren,
+        parse_close_paren,
+        parse_number,
+    ))(input)
+}
+
+fn tokenize(input: &str) -> IResult<&str, Vec<Token>> {
+    many0(parse_token)(input)
 }
 
 fn parse_sub(input: &str) -> IResult<&str, Token> {
@@ -119,5 +138,18 @@ mod tests {
         let res = parse_number(input);
 
         assert_eq!(res, Ok((remainder, Token::Number(output))));
+    }
+
+    #[test]
+    fn test_tokenizer() {
+        let res = tokenize("1+1");
+
+        assert_eq!(
+            res,
+            Ok((
+                "",
+                vec![Token::Number(1.), Token::Addition, Token::Number(1.)]
+            ))
+        );
     }
 }
