@@ -22,6 +22,7 @@ enum Token {
     Number(f64),
 }
 
+/// Copied from nom docs, this helper takes a &str parser, ignores whitespaces, and returns what the parser returns
 fn ws_eater<'i, O, E: ParseError<&'i str>, F>(inner: F) -> impl Parser<&'i str, O, E>
 where
     F: Parser<&'i str, O, E>,
@@ -153,6 +154,9 @@ mod tests {
     #[rstest]
     #[case("1+1")]
     #[case("1 + 1")]
+    #[case("1 +1")]
+    #[case("1.0 +1")]
+    #[case("01.0 +-1")]
     fn test_tokenizer(#[case] input: &str) {
         let res = tokenize(input);
 
