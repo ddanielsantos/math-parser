@@ -1,16 +1,26 @@
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use math_parser::tokenize;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
-struct Args {
-    /// Math expression to be parsed
-    #[arg(short, long)]
-    input: String,
+struct Cli {
+    #[command(subcommand)]
+    command: Option<Command>,
+}
+
+#[derive(Subcommand, Debug)]
+enum Command {
+    Tokenize {
+        /// Math expression to be parsed
+        input: String,
+    },
 }
 
 fn main() {
-    let args = Args::parse();
+    let cli = Cli::parse();
 
-    println!("{:?}", tokenize(args.input.as_str()));
+    match &cli.command {
+        Some(Command::Tokenize { input }) => println!("{:?}", tokenize(input.as_str())),
+        None => todo!(),
+    }
 }
